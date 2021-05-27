@@ -3,6 +3,9 @@ package br.com.giovanefilho.cursomc2.services;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.giovanefilho.cursomc2.domain.enums.Perfil;
+import br.com.giovanefilho.cursomc2.security.UserSS;
+import br.com.giovanefilho.cursomc2.services.exceptions.AuthorizationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -36,7 +39,12 @@ public class ClienteService {
 	private BCryptPasswordEncoder pe;
 
 	public Cliente find(Integer id) {
-		
+
+		UserSS user = UserService.authenticated();
+		if (user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())) {
+			throw new AuthorizationException("Acesso negado");
+		}
+
 		Optional<Cliente> obj = repo.findById(id);
 		return obj.orElseThrow(() ->  new ObjectNotFoundException("Objeto não encontrado. ID: " 
 				+ id 
