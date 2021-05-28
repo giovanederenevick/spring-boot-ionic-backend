@@ -1,5 +1,6 @@
 package br.com.giovanefilho.cursomc2.services;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ import br.com.giovanefilho.cursomc2.repositories.ClienteRepository;
 import br.com.giovanefilho.cursomc2.repositories.EnderecoRepository;
 import br.com.giovanefilho.cursomc2.services.exceptions.DataIntegrityException;
 import br.com.giovanefilho.cursomc2.services.exceptions.ObjectNotFoundException;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ClienteService {
@@ -37,6 +39,9 @@ public class ClienteService {
 
 	@Autowired
 	private BCryptPasswordEncoder pe;
+
+	@Autowired
+	private S3Service s3Service;
 
 	public Cliente find(Integer id) {
 
@@ -118,5 +123,10 @@ public class ClienteService {
 		
 		newObj.setNome(obj.getNome());
 		newObj.setEmail(obj.getEmail());
+	}
+
+	public URI uploadProfilePicture(MultipartFile multipartFile) {
+
+		return s3Service.uploadFile(multipartFile);
 	}
 }
