@@ -3,11 +3,15 @@ package br.com.giovanefilho.cursomc2.services;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.giovanefilho.cursomc2.domain.enums.Perfil;
+import br.com.giovanefilho.cursomc2.security.UserSS;
+import br.com.giovanefilho.cursomc2.services.exceptions.AuthorizationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +35,16 @@ public class ClienteService {
 	@Autowired
 	private EnderecoRepository enderecoRepo;
 
+	@Autowired
+	private BCryptPasswordEncoder pe;
+
 	public Cliente find(Integer id) {
-		
+
+		UserSS user = UserService.authenticated();
+		if (user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())) {
+			throw new AuthorizationException("Acesso negado");
+		}
+
 		Optional<Cliente> obj = repo.findById(id);
 		return obj.orElseThrow(() ->  new ObjectNotFoundException("Objeto não encontrado. ID: " 
 				+ id 
@@ -83,12 +95,12 @@ public class ClienteService {
 	
 	public Cliente fromDTO(ClienteDTO objDto) {
 		
-		return new Cliente(objDto.getId(), objDto.getNome(), objDto.getEmail(), null, null);
+		return new Cliente(objDto.getId(), objDto.getNome(), objDto.getEmail(), null, null, null);
 	}
 	
 	public Cliente fromDTO(ClienteNewDTO objDto) {
 		
-		Cliente cliente = new Cliente(null, objDto.getNome(), objDto.getEmail(), objDto.getCpfOuCnpj(), TipoCliente.toEnum(objDto.getTipoCliente()));
+		Cliente cliente = new Cliente(null, objDto.getNome(), objDto.getEmail(), objDto.getCpfOuCnpj(), TipoCliente.toEnum(objDto.getTipoCliente()), pe.encode(objDto.getSenha()));
 		Endereco endereco = new Endereco(null, objDto.getLogradouro(), objDto.getNumero(), objDto.getComplemento(), objDto.getBairro(), objDto.getCep(), cliente, new Cidade(objDto.getCidadeId(), null, null));
 		cliente.getEnderecos().add(endereco);
 		cliente.getTelefones().add(objDto.getTelefone1());
