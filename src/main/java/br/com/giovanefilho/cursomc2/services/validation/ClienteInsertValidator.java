@@ -1,6 +1,7 @@
 package br.com.giovanefilho.cursomc2.services.validation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -13,6 +14,7 @@ import br.com.giovanefilho.cursomc2.dto.ClienteNewDTO;
 import br.com.giovanefilho.cursomc2.repositories.ClienteRepository;
 import br.com.giovanefilho.cursomc2.resources.exceptions.FieldMessage;
 import br.com.giovanefilho.cursomc2.services.validation.utils.BR;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class ClienteInsertValidator implements ConstraintValidator<ClienteInsert, ClienteNewDTO> {
 	
@@ -35,8 +37,10 @@ public class ClienteInsertValidator implements ConstraintValidator<ClienteInsert
 		if (objDto.getTipoCliente()==TipoCliente.PESSOAJURIDICA.getCod() && !BR.isValidCNPJ(objDto.getCpfOuCnpj())) {
 			list.add(new FieldMessage("cpfOuCnpj", "CNPJ inválido"));
 		}
-		
-		Cliente aux = repo.findByEmail(objDto.getEmail());
+
+		Optional<Cliente> obj = repo.findByEmail(objDto.getEmail());
+		Cliente aux = obj.orElseThrow(() -> new UsernameNotFoundException(objDto.getEmail()));
+
 		if (aux!=null) {
 			list.add(new FieldMessage("email", "Email já existente"));
 		}

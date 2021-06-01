@@ -2,12 +2,14 @@ package br.com.giovanefilho.cursomc2.services.validation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.servlet.HandlerMapping;
 
 import br.com.giovanefilho.cursomc2.domain.Cliente;
@@ -35,9 +37,11 @@ public class ClienteUpdateValidator implements ConstraintValidator<ClienteUpdate
 		Integer uriId = Integer.parseInt(map.get("id"));
 		
 		List<FieldMessage> list = new ArrayList<>();
-	
-		Cliente aux = repo.findByEmail(objDto.getEmail());
-		if (aux!=null && !aux.getId().equals(uriId)) {
+
+		Optional<Cliente> obj = repo.findByEmail(objDto.getEmail());
+		Cliente aux = obj.orElseThrow(() -> new UsernameNotFoundException(objDto.getEmail()));
+
+		if (!aux.getId().equals(uriId)) {
 			list.add(new FieldMessage("email", "Email já existente"));
 		}
 

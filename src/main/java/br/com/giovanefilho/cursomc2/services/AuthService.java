@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -25,10 +26,9 @@ public class AuthService {
 
     public void sendNewPassword(String email) {
 
-        Cliente cliente = clienteRepository.findByEmail(email);
-        if (cliente == null) {
-            throw new ObjectNotFoundException("Email não encontrado");
-        }
+        Optional<Cliente> obj = clienteRepository.findByEmail(email);
+
+        Cliente cliente = obj.orElseThrow(() ->  new ObjectNotFoundException("Email não encontrado"));
 
         String newPass = newPassword();
         cliente.setSenha(pe.encode(newPass));
